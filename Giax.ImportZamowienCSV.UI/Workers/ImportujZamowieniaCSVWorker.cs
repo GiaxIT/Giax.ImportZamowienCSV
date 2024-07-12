@@ -103,9 +103,11 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     
                     //na teraz
                     dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Firma"];
+                    //dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Magazyn sprzedaży"];
 
                     //dodanie kontrahenta po kraju wysyłki
                     var pierwszaPozycja = filtrowane_pozycje.First();
+                    //var lokalizacja1 = pierwszaPozycja.Lokalizacja.Substring(0, 4);
                     var lokzalizacja = "SZ01";
                     var crmmodule = CRMModule.GetInstance(Session);
                     var kontrahenci = crmmodule.Kontrahenci.CreateView().ToList();
@@ -212,8 +214,6 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     };
 
                     pozycje.Add(pozycja);
-                 
-
                          
                     }
                 }
