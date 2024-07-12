@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Giax.ImportZamowienCSV.UI": {
+      "commandName": "Project",
+      "commandLineArgs": "--dbconfig=\"C:\\enovaDodatki\\Demo\\Lista baz danych.xml\"\r\n"
+    }
+  }
+}

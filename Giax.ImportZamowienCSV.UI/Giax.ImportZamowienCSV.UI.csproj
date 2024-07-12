@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Soneta.Sdk">
+  <PropertyGroup>
+    <TargetFramework>$(SonetaTargetFramework)</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="ViewInfo\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="Workers\ImportCSVWorkerWorkerParams.Ogolne.pageform.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="ImportCSVWorkerParams.Ogolne.pageform.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="ImportCSVWorkerParams.Ogolne.pageform.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="Model\ImportFilesWorkerParams.Ogolne.pageform.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="ImportCSVWorkerParams.Ogolne.pageform.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Remove="ImportCSVWorkerParams.Ogolne.pageform.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.102.2" />
+    <PackageReference Include="ServiceStack.Text" Version="8.3.0" />
+  </ItemGroup>
+</Project>

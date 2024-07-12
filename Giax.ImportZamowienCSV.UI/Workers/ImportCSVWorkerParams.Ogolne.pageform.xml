@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<DataForm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+          xmlns="http://www.enova.pl/schema/form.xsd"
+          xsi:schemaLocation="http://www.enova.pl/schema/ http://www.enova.pl/schema/form.xsd"
+          Priority="10000" 
+          DataType="Giax.ImportZamowienCSV.UI.ImportCSVWorkerParams,Giax.ImportZamowienCSV.UI">
+  <Page Name="ImportCSVWorkerParamsPage" CaptionHtml="" DataContext="{DataSource}">
+	  <Field CaptionHtml="Plik z zamówieniami" EditValue="{FilePath}" Width="60" Class="FileEdit" />
+  </Page>
+</DataForm>
