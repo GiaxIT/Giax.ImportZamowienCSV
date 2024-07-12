@@ -14,6 +14,8 @@ namespace Giax.ImportZamowienCSV.UI.Model
         public string NumerZamowieniaPO { get; set; }
 
         public string Dostepnosc {  set; get; }
+
+        public string Lokalizacja {  set; get; }
     }
 
 

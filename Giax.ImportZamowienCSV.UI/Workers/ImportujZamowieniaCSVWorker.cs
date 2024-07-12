@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using ServiceStack.Text;
 using ServiceStack;
+using Soneta.Kadry;
 
 [assembly: Worker(typeof(ImportujZamowieniaCSVWorker), typeof(DokHandlowe))]
 
@@ -52,6 +53,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
 
             int added_positions_count = 0;
+            int added_orders_count = 0;
+            bool czy_kontrahent = false;
             //#1 Import pliku
           
             string filepath = @params.FilePath;
@@ -89,16 +92,38 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                                                               .ToList();
 
                     added_positions_count += filtrowane_pozycje.Count();
+                    added_orders_count++;
 
                     DokumentHandlowy dokument = new DokumentHandlowy();
                     HandelModule.GetInstance(Session).DokHandlowe.AddRow(dokument);
                     
 
-                    dokument.Definicja = HandelModule.GetInstance(Session).DefDokHandlowych.ZamówienieOdbiorcy ;
+                    dokument.Definicja = HandelModule.GetInstance(Session).DefDokHandlowych.ZamówienieOdbiorcy;
                     dokument.Obcy.Numer = numer;
                     
                     //na teraz
                     dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Firma"];
+
+                    //dodanie kontrahenta po kraju wysyłki
+                    var pierwszaPozycja = filtrowane_pozycje.First();
+                    var lokzalizacja = "SZ01";
+                    var crmmodule = CRMModule.GetInstance(Session);
+                    var kontrahenci = crmmodule.Kontrahenci.CreateView().ToList();
+
+
+                    foreach(Kontrahent kont in kontrahenci)
+                    {
+                        var sa = kont.Lokalizacje.FirstOrDefault();
+                        if (sa != null && sa.Kod == lokzalizacja)
+                        {
+                            dokument.Kontrahent = kont;
+                            czy_kontrahent = true;
+                            break;
+                            
+                        }
+                    }
+
+                    if(!czy_kontrahent) return new MessageBoxInformation("Błąd", $"Nie znaleziono kontrahenta dla lokalizacji: {lokzalizacja}");
 
                     dokument.Data = Date.Parse(pozycje.FirstOrDefault().DataZamowienia);
 
@@ -127,7 +152,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
             return new MessageBoxInformation("Potwierdzasz wykonanie operacji ?")
             {
-                Text = "Pomyślnie zaimportowano " + added_positions_count + " pozycji.",
+                Text = "Pomyślnie zaimportowano: "+added_orders_count+ " zamowień i " + added_positions_count + " pozycji.",
                 YesHandler = () =>
                 {
                     using (var t = @params.Session.Logout(true))
@@ -182,7 +207,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         KosztJednostkowy = kosztJednostkowy,
                         NumerZamowieniaPO = csv.GetField<string>("PO"),
                         DataZamowienia = csv.GetField<string>("Data początkowa przedziału czasowego"),
-                        Dostepnosc = csv.GetField<string>("Dostępność")
+                        Dostepnosc = csv.GetField<string>("Dostępność"),
+                        Lokalizacja = csv.GetField<string>("Wysyłka do lokalizacji"),
                     };
 
                     pozycje.Add(pozycja);
