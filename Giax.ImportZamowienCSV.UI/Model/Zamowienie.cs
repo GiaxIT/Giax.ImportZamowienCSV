@@ -16,6 +16,8 @@ namespace Giax.ImportZamowienCSV.UI.Model
         public string Dostepnosc {  set; get; }
 
         public string Lokalizacja {  set; get; }
+
+        public string DataOtrzymania { get; set; }
     }
 
 

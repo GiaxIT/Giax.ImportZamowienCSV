@@ -119,6 +119,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         if (sa != null && sa.Kod == lokzalizacja)
                         {
                             dokument.Kontrahent = kont;
+                            dokument.OdbiorcaMiejsceDostawy = sa;
                             czy_kontrahent = true;
                             break;
                             
@@ -128,6 +129,12 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     if(!czy_kontrahent) return new MessageBoxInformation("Błąd", $"Nie znaleziono kontrahenta dla lokalizacji: {lokzalizacja}");
 
                     dokument.Data = Date.Parse(pozycje.FirstOrDefault().DataZamowienia);
+                    dokument.DataOtrzymania = Date.Parse(pozycje.FirstOrDefault().DataOtrzymania);
+
+
+                    if(@params.CzyZaakceptowany) dokument.Potwierdzenie = PotwierdzenieDokumentuHandlowego.Zaakceptowany; 
+                    if(@params.CzyZatwierdzony) dokument.Potwierdzenie = PotwierdzenieDokumentuHandlowego.Potwierdzony;
+                    
 
                     //dodanie pozycji do dokumentu
                     foreach (var poz in filtrowane_pozycje)
@@ -145,6 +152,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         Session.Events.Invoke();
                     }
 
+                    if (!@params.CzyBufor) dokument.Stan = StanDokumentuHandlowego.Zatwierdzony;
+
 
                 }
                 t.Commit();
@@ -152,18 +161,17 @@ namespace Giax.ImportZamowienCSV.UI.Workers
             }
 
 
-            return new MessageBoxInformation("Potwierdzasz wykonanie operacji ?")
+            return new MessageBoxInformation("Import CSV")
             {
                 Text = "Pomyślnie zaimportowano: "+added_orders_count+ " zamowień i " + added_positions_count + " pozycji.",
-                YesHandler = () =>
+                OKHandler = () =>
                 {
                     using (var t = @params.Session.Logout(true))
                     {
                         t.Commit();
                     }
                     return "Operacja została zakończona";
-                },
-                NoHandler = () => "Operacja przerwana"
+                }
             };
 
         }
@@ -211,6 +219,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         DataZamowienia = csv.GetField<string>("Data początkowa przedziału czasowego"),
                         Dostepnosc = csv.GetField<string>("Dostępność"),
                         Lokalizacja = csv.GetField<string>("Wysyłka do lokalizacji"),
+                        DataOtrzymania = csv.GetField<string>("Data końcowa przedziału czasowego")
                     };
 
                     pozycje.Add(pozycja);
@@ -236,6 +245,9 @@ namespace Giax.ImportZamowienCSV.UI.Workers
     public class ImportujZamowieniaCSVWorkerParams : ContextBase
     {
         private string V = "C:\\Users\\it01.DOMENA\\Downloads\\PurchaseOrderItems.csv";
+        private bool _czyPotwierdzony = false;
+        private bool _czyZaakceptowany = false;
+        private bool _czyBufor = true;
 
         public ImportujZamowieniaCSVWorkerParams(Context context) : base(context)
         {
@@ -257,6 +269,52 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                 V = value;
             }
         }
+
+        public bool CzyZatwierdzony
+        {
+            get
+            {
+                return _czyPotwierdzony;
+            }
+
+            set
+            {
+                _czyPotwierdzony = value;
+                _czyZaakceptowany = !_czyPotwierdzony; 
+            }
+        }
+
+        public bool CzyZaakceptowany
+        {
+            get
+            {
+                return _czyZaakceptowany;
+            }
+
+            set
+            {
+                _czyZaakceptowany = value;
+                _czyPotwierdzony = !_czyZaakceptowany;
+
+            }
+        }
+
+
+        public bool CzyBufor
+        {
+            get
+            {
+                return _czyBufor;
+            }
+
+            set
+            {
+                _czyBufor = value;
+              
+            }
+        }
+
+
     }
 
 }
