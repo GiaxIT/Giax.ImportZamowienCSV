@@ -7,8 +7,12 @@
           DataType="Giax.ImportZamowienCSV.UI.Workers.ImportujZamowieniaCSVWorkerParams,Giax.ImportZamowienCSV.UI">
   <Page Name="ImportujZamowieniaCSVWorkerParamsPage" CaptionHtml="test" DataContext="{DataSource}">
 	  <Field CaptionHtml="Plik z zamówieniami" EditValue="{FilePath}"  Class="FileEdit" Width="60" />
+	  <Field CaptionHtml="Definicja dokumentu" EditValue="{NazwaDefDok}" Width="10" />
+	  <Field CaptionHtml="Do jakiego magazynu przypisać zamówienia" EditValue="{NazwaMag}" class="ComboBox"  Width="20" />
 	  <Field CaptionHtml="Czy zamowienia sa potwierdzone?" EditValue="{CzyZatwierdzony}" Width="10" />
 	  <Field CaptionHtml="Czy zamowienia sa zaakceptowane?" EditValue="{CzyZaakceptowany}" Width="10" />
 	  <Field CaptionHtml="Czy zamowienia sa w buforze?" EditValue="{CzyBufor}" Width="10" />
+
+
   </Page>
 </DataForm>

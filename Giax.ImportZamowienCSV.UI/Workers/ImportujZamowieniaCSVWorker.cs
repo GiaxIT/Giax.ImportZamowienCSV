@@ -28,6 +28,10 @@ using System.Text;
 using ServiceStack.Text;
 using ServiceStack;
 using Soneta.Kadry;
+using static Giax.ImportZamowienCSV.UI.Workers.ImportujZamowieniaCSVWorkerParams;
+using Soneta.Magazyny;
+using System.Reflection.Emit;
+using System.Reflection;
 
 [assembly: Worker(typeof(ImportujZamowieniaCSVWorker), typeof(DokHandlowe))]
 
@@ -47,7 +51,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
         }
 
 
-        [Action("Importuj zamowienia Amazonu/CSV", Mode = ActionMode.SingleSession | ActionMode.ConfirmSave | ActionMode.Progress)]
+        [Action("Giax/Importuj zamowienia Amazon CSV", Icon = ActionIcon.ArrowUp, Mode = ActionMode.SingleSession | ActionMode.ConfirmSave | ActionMode.Progress)]
         public MessageBoxInformation CSV()
         {
 
@@ -55,8 +59,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
             int added_positions_count = 0;
             int added_orders_count = 0;
             bool czy_kontrahent = false;
-            //#1 Import pliku
-          
+
+            //#1 Import pliku    
             string filepath = @params.FilePath;
 
             if (!File.Exists(filepath))
@@ -96,27 +100,32 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                     DokumentHandlowy dokument = new DokumentHandlowy();
                     HandelModule.GetInstance(Session).DokHandlowe.AddRow(dokument);
-                    
 
-                    dokument.Definicja = HandelModule.GetInstance(Session).DefDokHandlowych.ZamówienieOdbiorcy;
+                    dokument.Definicja = HandelModule.GetInstance(Session).DefDokHandlowych.WgSymbolu[@params.NazwaDefDok];
+                   
                     dokument.Obcy.Numer = numer;
-                    
+
                     //na teraz
-                    dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Firma"];
-                    //dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Magazyn sprzedaży"];
-
-                    //dodanie kontrahenta po kraju wysyłki
+                    // dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Firma"];
+                    // dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa["Magazyn sprzedaży"];
+                     dokument.Magazyn = HandelModule.GetInstance(Session).Magazyny.Magazyny.WgNazwa[@params.NazwaMag];
+                   
+                    //dodanie kontrahenta po kodzie wysyłki
                     var pierwszaPozycja = filtrowane_pozycje.First();
-                    //var lokalizacja1 = pierwszaPozycja.Lokalizacja.Substring(0, 4);
-                    var lokzalizacja = "SZ01";
-                    var crmmodule = CRMModule.GetInstance(Session);
-                    var kontrahenci = crmmodule.Kontrahenci.CreateView().ToList();
 
+                    //aby uzyskac sam kod z calego adresu
+                    //var lokalizacja = pierwszaPozycja.Lokalizacja.Substring(0, 4);
+                    var lokzalizacja = "SZ01";
+
+
+                    var crmmodule = CRMModule.GetInstance(Session);
+                   
+                    var kontrahenci = crmmodule.Kontrahenci.CreateView().ToList();
 
                     foreach(Kontrahent kont in kontrahenci)
                     {
-                        var sa = kont.Lokalizacje.FirstOrDefault();
-                        if (sa != null && sa.Kod == lokzalizacja)
+                        var sa = kont.Lokalizacje.FirstOrDefault(lok => lokzalizacja.Contains(lok.Kod));
+                        if (sa != null)
                         {
                             dokument.Kontrahent = kont;
                             dokument.OdbiorcaMiejsceDostawy = sa;
@@ -142,8 +151,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         var pozycjaDokHandlowego = Session.AddRow(new PozycjaDokHandlowego(dokument));
 
                         //na demo
-                        var towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
-                        //var towar = TowaryModule.GetInstance(Session).Towary.WgEAN[poz.EAN].First();
+                        // var towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
+                        var towar = TowaryModule.GetInstance(Session).Towary.WgEAN[poz.EAN].First();
 
                         pozycjaDokHandlowego.Towar = towar;
                         pozycjaDokHandlowego.Ilosc = new Quantity(poz.Ilosc, pozycjaDokHandlowego.Towar.Jednostka.Kod);
@@ -244,18 +253,20 @@ namespace Giax.ImportZamowienCSV.UI.Workers
     }
     public class ImportujZamowieniaCSVWorkerParams : ContextBase
     {
-        private string V = "C:\\Users\\it01.DOMENA\\Downloads\\PurchaseOrderItems.csv";
+        private string V = "";
+
         private bool _czyPotwierdzony = false;
         private bool _czyZaakceptowany = false;
         private bool _czyBufor = true;
+        private string _nazwaMagazynu = "Magazyn sprzedaży";
+        private string _symbolDokumentu = "ZO";
 
         public ImportujZamowieniaCSVWorkerParams(Context context) : base(context)
         {
-            AddRequiredVerifierForProperty(nameof(FilePath));
+            AddRequiredVerifierForProperty(nameof(FilePath));           
 
         }
 
-        
         [Required]
         public string FilePath
         {
@@ -313,6 +324,35 @@ namespace Giax.ImportZamowienCSV.UI.Workers
               
             }
         }
+
+        public string NazwaDefDok
+        {
+            get
+            {
+                return _symbolDokumentu;
+            }
+
+            set
+            {
+                _symbolDokumentu = value;
+            }
+        }
+
+        public string NazwaMag
+        {
+            get
+            {
+                
+                return _nazwaMagazynu;
+            }
+
+            set
+            {
+                _nazwaMagazynu = value;
+            }
+        }
+
+       
 
 
     }
