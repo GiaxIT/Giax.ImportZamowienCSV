@@ -89,7 +89,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                     var pierwszaPozycja = filtrowane_pozycje.First();
                     var lokzalizacja = pierwszaPozycja.Lokalizacja.Substring(0, 4);
-
+                   //testy var lokzalizacja = "XS";
                     var crmmodule = CRMModule.GetInstance(Session);
                     var lokalziacje_kont = crmmodule.Lokalizacje.CreateView().ToList();
 
@@ -117,7 +117,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     {
                         var pozycjaDokHandlowego = Session.AddRow(new PozycjaDokHandlowego(dokument));
                         var towar = TowaryModule.GetInstance(Session).Towary.WgEAN[poz.EAN].First();
-
+                        //testy var towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
                         pozycjaDokHandlowego.Towar = towar;
                         pozycjaDokHandlowego.Ilosc = new Quantity(poz.Ilosc, pozycjaDokHandlowego.Towar.Jednostka.Kod);
                         pozycjaDokHandlowego.Cena = new DoubleCy(poz.KosztJednostkowy);
@@ -125,7 +125,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                     if (!@params.CzyBufor) dokument.Stan = StanDokumentuHandlowego.Zatwierdzony;
 
-                    // Wywołanie session events tylko raz na dokument
+                    
                     Session.Events.Invoke();
                 }
                 t.Commit();
