@@ -28,6 +28,10 @@ using Soneta.Business.Licence;
 using Soneta.Business.App;
 using DocumentFormat.OpenXml.Presentation;
 using static Soneta.Place.WypElementNadgodziny;
+using System.Configuration;
+using Soneta.Kasa;
+using Soneta.Core;
+using ServiceStack;
 
 [assembly: Worker(typeof(ImportujZamowieniaCSVWorker), typeof(DokHandlowe))]
 
@@ -40,6 +44,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
         [Context]
         public ImportujZamowieniaCSVWorkerParams @params { get; set; }
+
+
 
         [Action("Giax/Importuj zamowienia Amazon CSV", Icon = ActionIcon.ArrowUp, Mode = ActionMode.SingleSession | ActionMode.ConfirmSave | ActionMode.Progress)]
         public MessageBoxInformation CSV()
@@ -89,7 +95,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                     var pierwszaPozycja = filtrowane_pozycje.First();
                     var lokzalizacja = pierwszaPozycja.Lokalizacja.Substring(0, 4);
-                   //testy var lokzalizacja = "XS";
+                  //  var lokzalizacja = "XS";
                     var crmmodule = CRMModule.GetInstance(Session);
                     var lokalziacje_kont = crmmodule.Lokalizacje.CreateView().ToList();
 
@@ -113,11 +119,23 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     if (@params.CzyZaakceptowany) dokument.Potwierdzenie = PotwierdzenieDokumentuHandlowego.Zaakceptowany;
                     if (@params.CzyZatwierdzony) dokument.Potwierdzenie = PotwierdzenieDokumentuHandlowego.Potwierdzony;
 
+                    var towar_modue = TowaryModule.GetInstance(Session).Towary;
                     foreach (var poz in filtrowane_pozycje)
                     {
                         var pozycjaDokHandlowego = Session.AddRow(new PozycjaDokHandlowego(dokument));
-                        var towar = TowaryModule.GetInstance(Session).Towary.WgEAN[poz.EAN].First();
-                        //testy var towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
+                       
+                        Towar towar;
+                        try
+                        {
+                            towar = towar_modue.WgEAN[poz.EAN].First();
+
+                        }
+                        catch (Exception ex)
+                        {
+                            return new MessageBoxInformation("Błąd", $"Nie znaleziono towaru dla EAN: {poz.EAN}");
+                        }
+
+                       // towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
                         pozycjaDokHandlowego.Towar = towar;
                         pozycjaDokHandlowego.Ilosc = new Quantity(poz.Ilosc, pozycjaDokHandlowego.Towar.Jednostka.Kod);
                         pozycjaDokHandlowego.Cena = new DoubleCy(poz.KosztJednostkowy);
@@ -144,6 +162,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                 }
             };
         }
+
+
 
         public List<Pozycja> ReadCSVFile(string filePath)
         {
@@ -190,14 +210,24 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     };
 
                     pozycje.Add(pozycja);
+                   
                 }
             }
 
+
+           
             return pozycje;
         }
 
+
+
         static List<string> GetUniqueOrderNumbers(List<Pozycja> pozycje)
         {
+
+            
+
+
+
             return pozycje.Select(p => p.NumerZamowieniaPO).Distinct().ToList();
         }
     }
@@ -214,10 +244,10 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
         public ImportujZamowieniaCSVWorkerParams(Context context) : base(context)
         {
-            AddRequiredVerifierForProperty(nameof(FilePath));
+          //  AddRequiredVerifierForProperty(nameof(FilePath));
         }
 
-        [Required]
+        //[Required]
         public string FilePath
         {
             get { return V; }
@@ -231,6 +261,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
             {
                 _czyPotwierdzony = value;
                 _czyZaakceptowany = !_czyPotwierdzony;
+                _czyBufor = !_czyPotwierdzony;
             }
         }
 
@@ -241,13 +272,18 @@ namespace Giax.ImportZamowienCSV.UI.Workers
             {
                 _czyZaakceptowany = value;
                 _czyPotwierdzony = !_czyZaakceptowany;
+                _czyBufor =!_czyZaakceptowany;
             }
         }
 
         public bool CzyBufor
         {
             get { return _czyBufor; }
-            set { _czyBufor = value; }
+            set { 
+                _czyBufor = value; 
+                _czyZaakceptowany= !_czyBufor;
+                _czyPotwierdzony= !_czyBufor;             
+            }
         }
 
         public string NazwaDefDok
