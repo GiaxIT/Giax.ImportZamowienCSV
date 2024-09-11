@@ -32,6 +32,8 @@ using System.Configuration;
 using Soneta.Kasa;
 using Soneta.Core;
 using ServiceStack;
+using CsvHelper.Configuration.Attributes;
+using Soneta.Tools;
 
 [assembly: Worker(typeof(ImportujZamowieniaCSVWorker), typeof(DokHandlowe))]
 
@@ -45,27 +47,34 @@ namespace Giax.ImportZamowienCSV.UI.Workers
         [Context]
         public ImportujZamowieniaCSVWorkerParams @params { get; set; }
 
+       
 
 
         [Action("Giax/Importuj zamowienia Amazon CSV", Icon = ActionIcon.ArrowUp, Mode = ActionMode.SingleSession | ActionMode.ConfirmSave | ActionMode.Progress)]
+      
         public MessageBoxInformation CSV()
         {
             int added_positions_count = 0;
             int added_orders_count = 0;
             bool czy_kontrahent = false;
 
+            var fs = Session.GetService<IFileSystemService>();
+            var data = fs.ReadStream(@params.Plik);
+
+           
+           
             string filepath = @params.FilePath;
 
-            if (!File.Exists(filepath))
-            {
-                return new MessageBoxInformation("Błąd", "Plik nie istnieje.");
-            }
+          //  if (!File.Exists(filepath))
+            //{
+               // return new MessageBoxInformation("Błąd", "Plik nie istnieje.");
+//            }
 
             List<Pozycja> pozycje;
 
             try
             {
-                pozycje = ReadCSVFile(filepath);
+                pozycje = ReadCSVFile(data);
             }
             catch (Exception ex)
             {
@@ -73,6 +82,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
             }
 
             List<string> numery_zamowien = GetUniqueOrderNumbers(pozycje);
+
+            List<DokumentHandlowy> zamowienia = new List<DokumentHandlowy>(); 
 
             using (var t = Session.Logout(true))
             {
@@ -95,7 +106,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                     var pierwszaPozycja = filtrowane_pozycje.First();
                     var lokzalizacja = pierwszaPozycja.Lokalizacja.Substring(0, 4);
-                  //  var lokzalizacja = "XS";
+                    //var lokzalizacja = "XS";
                     var crmmodule = CRMModule.GetInstance(Session);
                     var lokalziacje_kont = crmmodule.Lokalizacje.CreateView().ToList();
 
@@ -116,6 +127,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     dokument.Data = Date.Parse(filtrowane_pozycje.First().DataZamowienia);
                     dokument.DataOtrzymania = Date.Parse(filtrowane_pozycje.First().DataOtrzymania);
 
+                    
+
                     if (@params.CzyZaakceptowany) dokument.Potwierdzenie = PotwierdzenieDokumentuHandlowego.Zaakceptowany;
                     if (@params.CzyZatwierdzony) dokument.Potwierdzenie = PotwierdzenieDokumentuHandlowego.Potwierdzony;
 
@@ -135,7 +148,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                             return new MessageBoxInformation("Błąd", $"Nie znaleziono towaru dla EAN: {poz.EAN}");
                         }
 
-                       // towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
+                        //towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
                         pozycjaDokHandlowego.Towar = towar;
                         pozycjaDokHandlowego.Ilosc = new Quantity(poz.Ilosc, pozycjaDokHandlowego.Towar.Jednostka.Kod);
                         pozycjaDokHandlowego.Cena = new DoubleCy(poz.KosztJednostkowy);
@@ -143,10 +156,10 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                     if (!@params.CzyBufor) dokument.Stan = StanDokumentuHandlowego.Zatwierdzony;
 
+                    zamowienia.Add(dokument);
                     
                     Session.Events.Invoke();
                 }
-                t.Commit();
             }
 
             return new MessageBoxInformation("Import CSV")
@@ -165,11 +178,12 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
 
 
-        public List<Pozycja> ReadCSVFile(string filePath)
+        public List<Pozycja> ReadCSVFile(object filePath)
         {
             var pozycje = new List<Pozycja>();
-
-            using (var reader = new StreamReader(filePath))
+            var fs = Session.GetService<IFileSystemService>();
+            var data = fs.ReadStream(@params.Plik);
+            using (var reader = new StreamReader(data))
             using (var csv = new CsvHelper.CsvReader(reader, CultureInfo.InvariantCulture))
             {
                 csv.Read();
@@ -242,9 +256,34 @@ namespace Giax.ImportZamowienCSV.UI.Workers
         private string _nazwaMagazynu = "Magazyn sprzedaży";
         private string _symbolDokumentu = "ZO";
 
+        
+        public string Plik { get; set; }
+
+        public object GetListPlik()
+        {
+            return new FileDialogInfo
+            {
+                Title = "Wybierz plik",
+                DefaultExt = ".csv",
+                ForbidMultiSelection = true,
+                InitialDirectory = @"C:\"
+            };
+        }
+
         public ImportujZamowieniaCSVWorkerParams(Context context) : base(context)
         {
           //  AddRequiredVerifierForProperty(nameof(FilePath));
+        }
+
+     //   [Context]
+       // [Required]
+       // [Caption("Kolumna - Konto")]
+      //  public NamedStream Plik { get; set; }
+
+
+        public Object GetList()
+        {
+            return new FileDialogInfo { Title = "Wybierz pliki z wyciągami", ForbidMultiSelection = false }.AddAllFilesFilter();
         }
 
         //[Required]
