@@ -4,6 +4,6 @@
     <SonetaPackageVersion>2210.2.2</SonetaPackageVersion>
     <SonetaTargetFramework>netstandard2.0</SonetaTargetFramework>
 	<SonetaTestsTargetFramework>net472</SonetaTestsTargetFramework>
-	  <SonetaAddonStartProgram>C:\Program Files\Soneta\enova\SonetaExplorer.exe</SonetaAddonStartProgram>
+	  <SonetaAddonStartProgram>C:\Program Files\Soneta\enova2406.3.6\SonetaExplorer.exe</SonetaAddonStartProgram>
   </PropertyGroup>
 </Project>

@@ -92,8 +92,9 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     foreach (var numer in numery_zamowien)
                     {
                         TraceInfo.WriteProgress("Obiekt: " + i + " (pozostało: " + numery_zamowien.Count + ")");
-                    TraceInfo.SetProgressBar(new Percent(i + 1, numery_zamowien.Count));
-                        List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer && !p.Dostepnosc.Contains("Anulowano")).ToList();
+                        TraceInfo.SetProgressBar(new Percent(i + 1, numery_zamowien.Count));
+                        // List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer && !p.Dostepnosc.Contains("Anulowano")).ToList();
+                        List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer).ToList();
 
                         if (!filtrowane_pozycje.Any())
                             continue;
@@ -128,8 +129,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         if (!czy_kontrahent)
                             return new MessageBoxInformation("Błąd", $"Nie znaleziono kontrahenta dla lokalizacji: {lokzalizacja}");
 
-                        dokument.Data = Date.Parse(filtrowane_pozycje.First().DataZamowienia);
-                        dokument.DataOtrzymania = Date.Parse(filtrowane_pozycje.First().DataOtrzymania);
+                        dokument.Data = Date.Today;
+                        dokument.DataOtrzymania = Date.Today.AddDays(2);
 
 
 
@@ -144,7 +145,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                             Towar towar;
                             try
                             {
-                               towar = towar_modue.WgEAN[poz.EAN].First();
+                                 towar = towar_modue.WgEAN[poz.EAN].First();
 
                             }
                             catch (Exception ex)
@@ -152,7 +153,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                                 return new MessageBoxInformation("Błąd", $"Nie znaleziono towaru dla EAN: {poz.EAN}");
                             }
 
-                            //towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
+                           // towar = TowaryModule.GetInstance(Session).Towary.WgEAN["2000000001005"].First();
                             pozycjaDokHandlowego.Towar = towar;
                             pozycjaDokHandlowego.Ilosc = new Quantity(poz.Ilosc, pozycjaDokHandlowego.Towar.Jednostka.Kod);
                             pozycjaDokHandlowego.Cena = new DoubleCy(poz.KosztJednostkowy);
@@ -160,7 +161,8 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
                         if (!@params.CzyBufor) dokument.Stan = StanDokumentuHandlowego.Zatwierdzony;
                         dokument.Features["Dane kuriera"] = "UPS";
-                        dokument.Features["Data_Dostawy_Zam"] = Date.Parse(filtrowane_pozycje.First().DataZamowienia).AddDays(2);
+                        dokument.Features["Data_Dostawy_Zam"] = Date.Today.AddDays(2);
+
                         zamowienia.Add(dokument);
 
                        
@@ -197,9 +199,10 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                 string acceptedQuantityColumn = secondColumnHeader == "Vendor" ? "Accepted Quantity" : "Zaakceptowana ilość";
                 string unitCostColumn = secondColumnHeader == "Vendor" ? "Unit Cost" : "Koszt jednostkowy";
                 string totalCostColumn = secondColumnHeader == "Vendor" ? "Total Cost" : "Całkowity koszt";
-                string windowStartColumn = secondColumnHeader == "Vendor" ? "Window Start" : "Data początkowa przedziału czasowego";
-                string windowEndColumn = secondColumnHeader == "Vendor" ? "Window End" : "Data końcowa przedziału czasowego";
-                string availabilityColumn = secondColumnHeader == "Vendor" ? "Availability" : "Dostępność";
+                //string windowStartColumn = secondColumnHeader == "Vendor" ? "Window Start" : "Data początkowa przedziału czasowego";
+                //string windowEndColumn = secondColumnHeader == "Vendor" ? "Window End" : "Data końcowa przedziału czasowego";
+                //string availabilityColumn = secondColumnHeader == "Vendor" ? "Availability" : "Dostępność";
+
 
                 while (csv.Read())
                 {
@@ -230,11 +233,12 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         Ilosc = ilosc,
                         KosztJednostkowy = kosztJednostkowy,
                         NumerZamowieniaPO = csv.GetField<string>(poColumn),
-                        DataZamowienia = csv.GetField<string>(windowStartColumn),
-                        Dostepnosc = csv.GetField<string>(availabilityColumn),
+                        //DataZamowienia = csv.GetField<string>(windowStartColumn),
+                        // Dostepnosc = csv.GetField<string>(availabilityColumn),
                         Lokalizacja = csv.GetField<string>(warehouseColumn),
-                        DataOtrzymania = csv.GetField<string>(windowEndColumn)
+                        //  DataOtrzymania = csv.GetField<string>(windowEndColumn)
                     };
+
 
                     pozycje.Add(pozycja);
                 }
