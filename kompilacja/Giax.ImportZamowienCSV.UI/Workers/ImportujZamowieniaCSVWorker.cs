@@ -36,7 +36,6 @@ using CsvHelper.Configuration.Attributes;
 using Soneta.Tools;
 using Soneta.Data.QueryDefinition;
 using System.Threading;
-using Soneta.Business.Db;
 
 [assembly: Worker(typeof(ImportujZamowieniaCSVWorker), typeof(DokHandlowe))]
 
@@ -47,13 +46,13 @@ namespace Giax.ImportZamowienCSV.UI.Workers
         [Context]
         public Session Session { get; set; }
 
-         
         [Context]
         public ImportujZamowieniaCSVWorkerParams @params { get; set; }
 
        
 
-        [Action("Giax/Importuj zamowienia Amazon CSV/Importuj", Icon = ActionIcon.ArrowUp, Mode = ActionMode.SingleSession | ActionMode.ConfirmSave | ActionMode.Progress)]
+
+        [Action("Giax/Importuj zamowienia Amazon CSV", Icon = ActionIcon.ArrowUp, Mode = ActionMode.SingleSession | ActionMode.ConfirmSave | ActionMode.Progress)]
       
         public object CSV()
         {
@@ -93,9 +92,9 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                     foreach (var numer in numery_zamowien)
                     {
                         TraceInfo.WriteProgress("Obiekt: " + i + " (pozostało: " + numery_zamowien.Count + ")");
-                        TraceInfo.SetProgressBar(new Percent(i + 1, numery_zamowien.Count));
-                        // List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer && !p.Dostepnosc.Contains("Anulowano")).ToList();
-                        List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer).ToList();
+                    TraceInfo.SetProgressBar(new Percent(i + 1, numery_zamowien.Count));
+                        //List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer && !p.Dostepnosc.Contains("Anulowano")).ToList();
+                        List<Pozycja> filtrowane_pozycje = pozycje.Where(p => p.NumerZamowieniaPO == numer ).ToList();
 
                         if (!filtrowane_pozycje.Any())
                             continue;
@@ -120,18 +119,18 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         {
                             if (lok.Nazwa.Contains(lokzalizacja))
                             {
-                              //  dokument.Kontrahent = (Kontrahent)lok.Kontrahent;
+                                dokument.Kontrahent = (Kontrahent)lok.Kontrahent;
                                 dokument.OdbiorcaMiejsceDostawy = lok;
                                 czy_kontrahent = true;
                                 break;
                             }
                         }
 
-                        Kontrahent kth = Session.GetCRM().Kontrahenci.WgNazwy[@params.Kontrahent].FirstOrDefault();
-                        if (kth == null)
-                            return new MessageBoxInformation("Błąd", $"Błąd kontrahenta!");
-                        dokument.Kontrahent = kth;
-                      
+                        if (!czy_kontrahent)
+                            return new MessageBoxInformation("Błąd", $"Nie znaleziono kontrahenta dla lokalizacji: {lokzalizacja}");
+
+                        //dokument.Data = Date.Parse(filtrowane_pozycje.First().DataZamowienia);
+                        // dokument.DataOtrzymania = Date.Parse(filtrowane_pozycje.First().DataOtrzymania);
                         dokument.Data = Date.Today;
                         dokument.DataOtrzymania = Date.Today.AddDays(2);
 
@@ -148,7 +147,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                             Towar towar;
                             try
                             {
-                                 towar = towar_modue.WgEAN[poz.EAN].First();
+                              towar = towar_modue.WgEAN[poz.EAN].First();
 
                             }
                             catch (Exception ex)
@@ -156,7 +155,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                                 return new MessageBoxInformation("Błąd", $"Nie znaleziono towaru dla EAN: {poz.EAN}");
                             }
 
-                            //towar = TowaryModule.GetInstance(Session).Towary.WgEAN["2000000001005"].First();
+                            //towar = TowaryModule.GetInstance(Session).Towary.WgEAN["5901035500211"].First();
                             pozycjaDokHandlowego.Towar = towar;
                             pozycjaDokHandlowego.Ilosc = new Quantity(poz.Ilosc, pozycjaDokHandlowego.Towar.Jednostka.Kod);
                             pozycjaDokHandlowego.Cena = new DoubleCy(poz.KosztJednostkowy);
@@ -173,8 +172,7 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
 
                 }
-                 //t.CommitUI();
-                t.Commit();
+                t.CommitUI();
             }
             return new MessageBoxInformation("Sukces", $"Zaimportowane zamówienia {numery_zamowien.Count}");
 
@@ -207,7 +205,6 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                 //string windowEndColumn = secondColumnHeader == "Vendor" ? "Window End" : "Data końcowa przedziału czasowego";
                 //string availabilityColumn = secondColumnHeader == "Vendor" ? "Availability" : "Dostępność";
 
-
                 while (csv.Read())
                 {
                     var iloscString = csv.GetField<string>(acceptedQuantityColumn);
@@ -238,11 +235,10 @@ namespace Giax.ImportZamowienCSV.UI.Workers
                         KosztJednostkowy = kosztJednostkowy,
                         NumerZamowieniaPO = csv.GetField<string>(poColumn),
                         //DataZamowienia = csv.GetField<string>(windowStartColumn),
-                        // Dostepnosc = csv.GetField<string>(availabilityColumn),
+                       // Dostepnosc = csv.GetField<string>(availabilityColumn),
                         Lokalizacja = csv.GetField<string>(warehouseColumn),
-                        //  DataOtrzymania = csv.GetField<string>(windowEndColumn)
+                      //  DataOtrzymania = csv.GetField<string>(windowEndColumn)
                     };
-
 
                     pozycje.Add(pozycja);
                 }
@@ -255,10 +251,13 @@ namespace Giax.ImportZamowienCSV.UI.Workers
 
         static List<string> GetUniqueOrderNumbers(List<Pozycja> pozycje)
         {
+
+            
+
+
+
             return pozycje.Select(p => p.NumerZamowieniaPO).Distinct().ToList();
         }
-
-
     }
 
     public class ImportujZamowieniaCSVWorkerParams : ContextBase
@@ -270,35 +269,6 @@ namespace Giax.ImportZamowienCSV.UI.Workers
         private bool _czyBufor = true;
         private string _nazwaMagazynu = "Magazyn sprzedaży";
         private string _symbolDokumentu = "ZO";
-        private string _kontrahent = "";
-
-
-        public Object GetListKontrahent()
-        {
-           List<string> lista = new List<string>();
-            var kontrahenci = Session.GetCRM().Kontrahenci.Rows
-      .OfType<Kontrahent>()
-      .Where(r => (bool)r.Features["Giax_ImportAmazon"] == true);
-            foreach ( Kontrahent row in kontrahenci)
-            {
-                lista.Add(row.Nazwa);
-            }
-
-            return lista;
-
-        }
-        [ControlEdit(ControlEditKind.ComboBox)]
-        public string Kontrahent
-        {
-            get
-            {
-                return _kontrahent;
-            }
-            set
-            {
-                _kontrahent = value;
-            }
-        }
 
         
         public string Plik { get; set; }

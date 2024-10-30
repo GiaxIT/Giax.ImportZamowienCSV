@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<DataForm xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+          xmlns="http://www.enova.pl/schema/form.xsd"
+          xsi:schemaLocation="http://www.enova.pl/schema/ http://www.enova.pl/schema/form.xsd"
+          Priority="10000" 
+          DataType="Giax.ImportZamowienCSV.UI.KonfiguracjaWorkerParams,Giax.ImportZamowienCSV.UI">
+  <Page Name="KonfiguracjaWorkerParamsPage" CaptionHtml="" DataContext="{DataSource}">
+    <Field CaptionHtml="Parametr1" EditValue="{Parametr1}"/>
+  </Page>
+</DataForm>

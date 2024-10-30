@@ -28,7 +28,4 @@
     <PackageReference Include="ClosedXML" Version="0.102.2" />
     <PackageReference Include="ServiceStack.Text" Version="8.3.0" />
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Remove="KonfiguracjaWorkerParams.Ogolne.pageform.xml" />
-  </ItemGroup>
 </Project>

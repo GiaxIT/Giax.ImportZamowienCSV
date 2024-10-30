@@ -8,7 +8,6 @@
   <Page Name="ImportujZamowieniaCSVWorkerParamsPage" CaptionHtml="Import Zamowien Amazon" DataContext="{DataSource}">
 	 
 	  <Field EditValue="{Plik}" Width="60" Class="FileEdit SaveFileEdit" />
-	  <Field EditValue="{Kontrahent}" Width="30" />
 	  <Field CaptionHtml="Definicja dokumentu" EditValue="{NazwaDefDok}" Width="10" />
 	  <Field CaptionHtml="Do jakiego magazynu przypisać zamówienia" EditValue="{NazwaMag}" class="ComboBox"  Width="20" />
 	  <Field CaptionHtml="Czy zamowienia sa potwierdzone?" EditValue="{CzyZatwierdzony}" Width="10" />
